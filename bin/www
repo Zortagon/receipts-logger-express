@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+// * Import the required modules for the server and app
+const app = require("../app"); // Main application module
+const http = require("http"); // Node.js HTTP server module
+
+// * Use a colorful library for terminal output
+const chalk = require("chalk");
+
+// * Determine the port number from the environment variable or use 3000 as a default
+const PORT = (() => {
+    // Attempt to parse PORT environment variable as an integer
+    const port = parseInt(process.env.PORT, 10);
+
+    // Handle potential errors and provide informative defaults
+    if (isNaN(port)) {
+        console.error(
+            chalk.yellow(
+                "[WARN]: PORT environment variable is not a valid number.",
+            ),
+        );
+        console.info("[INFO]: Switching to default safe port 3000");
+        return 3000; // Use a safe default port
+    } else if (port < 0) {
+        console.error(
+            chalk.red("[ERROR]: PORT environment variable cannot be negative."),
+        );
+        console.info("[INFO]: Switching to default safe port 3000");
+        return 3000; // Use a safe default port
+    } else {
+        // Return the valid port number
+        return port;
+    }
+})();
+
+// * Set the port configuration in the app
+app.set("port", PORT);
+
+// * Create an HTTP server instance using the app
+const serverInstance = http.createServer(app);
+serverInstance.listen(PORT);
+
+// * Event listener for HTTP server "error" event
+serverInstance.on("error", (error) => {
+    if (error["syscall"] !== "listen") {
+        throw error;
+    }
+    const bind = typeof PORT === "string" ? `PIPE ${PORT}` : `PORT ${PORT}`;
+    // Handle specific listen errors with friendly messages
+    if (error.code === "EACCES") {
+        console.error(
+            chalk.red(
+                `[ERROR]: ${chalk.bold(bind)} requires elevated privileges`,
+            ),
+        );
+        process.exit(1);
+        console.error(
+            chalk.red(`[ERROR]: ${chalk.bold(bind)} is already in use`),
+        );
+        process.exit(1);
+        throw error;
+    } else if (error.code === "EADDRINUSE") {
+        console.error(
+            chalk.red(`[ERROR]: ${chalk.bold(bind)} is already in use`),
+        );
+        process.exit(1);
+        throw error;
+    } else {
+        throw error;
+    }
+});
+
+// * Event listener for HTTP server "listening" event
+serverInstance.on("listening", () => {
+    const addr = serverInstance.address();
+    const bind =
+        process.env.NODE_ENV === "DEV"
+            ? `http://localhost:${addr.port}/`
+            : typeof addr === "string"
+              ? "PIPE " + addr
+              : "PORT " + addr.port;
+    // Log a message when the server is running
+    console.info(
+        chalk(`[INFO]: Server is running on: ${chalk.blue.bold(bind)}`),
+    );
+});

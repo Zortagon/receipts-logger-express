@@ -1,0 +1,21 @@
+{
+    "name": "learn-prisma",
+    "version": "1.0.0",
+    "description": "Learn prisma for data modeling",
+    "main": "bin/www",
+    "private": true,
+    "scripts": {
+        "start:development": "nodemon --env-file=.env bin/www",
+        "start": "node bin/www"
+    },
+    "author": "Aldian Fernanda",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "express": "^4.18.3"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.0",
+        "prettier": "^3.2.5"
+    }
+}
