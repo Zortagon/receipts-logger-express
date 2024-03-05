@@ -1,22 +1,39 @@
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 
-const { DB_NAME, DB_URI } = process.env;
-if (!DB_URI || !DB_NAME) {
-    throw new Error(
-        `Missing environment variable(s): ${!DB_URI ? "DB_URI" : null} ${!DB_NAME ? "DB_NAME" : null}`,
-    );
+// Importing logger utility and chalk for colorful logging
+const { logger } = require("../utils");
+const chalk = require("chalk");
+
+/** Asynchronous function to connect to the MongoDB database */
+async function connectDatabase(options) {
+    try {
+        // Extracting database connection string from environment variables
+        const { DB_CONNECTION } = process.env;
+
+        // Establishing connection to the MongoDB database
+        const { connection } = await mongoose.connect(DB_CONNECTION);
+
+        // Logging connection status if showLogger is true
+        if (options.logger == true)
+            logger.info([
+                `Successfully connected to database: ${chalk.white.bold("MongoDB")}`,
+                `* (URL) Connection: ${chalk.green.underline(connection._connectionString)}`,
+            ]);
+    } catch (error) {
+        // Logging connection error and throwing an error
+        const message = error.message ?? error;
+        if (options.logger === true || options.stopFailed === true) {
+            logger.error(`Failed to connect MongoDB: ${message}`);
+        }
+        // Shut down application instance if stopFailed option is enabled
+        if (options.stopFailed === true) {
+            logger.error("Shutting down application instance...");
+            process.exit(1);
+        }
+        // Throw error regardless of options
+        throw new Error(message);
+    }
 }
 
-const client = new MongoClient(DB_URI);
-
-const connect = async () => {
-    try {
-        const conn = await client.connect();
-        return conn.db(DB_NAME);
-    } catch (error) {
-        console.error("Error connecting to MongoDB:", error);
-        throw error;
-    }
-};
-
-module.exports = connect;
+// Exporting the connectDatabase function
+module.exports = connectDatabase;

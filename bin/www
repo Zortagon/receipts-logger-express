@@ -19,13 +19,13 @@ const PORT = (() => {
                 "[WARN]: PORT environment variable is not a valid number.",
             ),
         );
-        console.info("[INFO]: Switching to default safe port 3000");
+        console.info("[INFO]: Switching to default safe port (3000)");
         return 3000; // Use a safe default port
     } else if (port < 0) {
         console.error(
             chalk.red("[ERROR]: PORT environment variable cannot be negative."),
         );
-        console.info("[INFO]: Switching to default safe port 3000");
+        console.info("[INFO]: Switching to default safe port (3000)");
         return 3000; // Use a safe default port
     } else {
         // Return the valid port number
@@ -81,6 +81,6 @@ serverInstance.on("listening", () => {
               : "PORT " + addr.port;
     // Log a message when the server is running
     console.info(
-        chalk(`[INFO]: Server is running on: ${chalk.blue.bold(bind)}`),
+        chalk(`[INFO]: Server is running on: ${chalk.blue.underline(bind)}`),
     );
 });
