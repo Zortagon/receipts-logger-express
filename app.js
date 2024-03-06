@@ -1,7 +1,9 @@
 const express = require("express");
+const routes = require("./routes");
+
 const connectDatabase = require("./database");
 
-const Receipt = require("./models/Receipt");
+const jwt = require("jsonwebtoken");
 
 connectDatabase({
     // Enable exiting the application if connection fails
@@ -12,16 +14,9 @@ connectDatabase({
 
 const app = express();
 
-app.get("/", async (_, res) => {
-    const receipt = new Receipt({
-        amount: 1500000,
-    });
-    receipt.save();
-    //     receipt_number: "03012024-000002",
-    // });
-    // console.info(receipt);
+app.use(express.json());
 
-    res.send({ success: new Date() }).status(200);
-});
+// Use the defined routes
+app.use("/", routes);
 
 module.exports = app;
