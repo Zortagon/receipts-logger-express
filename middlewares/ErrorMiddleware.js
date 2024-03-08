@@ -1,43 +1,61 @@
 /*
- * Module for handling errors and creating error responses.
+ * Module for handling HTTP errors and sending error responses.
  * Exports two functions:
- *   - createError: Creates an error response with given code and message.
- *   - handleError: Handles an error response and sends it back with appropriate status code.
- * 
- * @param {Object} response - Express response object.
- * @param {number} code - HTTP status code for the error response.
+ *   - throwHttpError: Throws an HTTP error with given code, message, and optional details.
+ *   - errorResponder: Middleware function to handle HTTP errors and send error responses.
+ *
+ * @param {number} code - HTTP status code for the error.
  * @param {string} message - Message describing the error.
+ * @param {Object} details - Optional details about the error.
  */
+const http = require("http");
+
 module.exports = {
     /**
-     * Create an error response with the given code and message.
-     * Calls handleError internally to handle the error response.
-     * 
-     * @param {Object} response - Express response object.
-     * @param {number} code - HTTP status code for the error response.
-     * @param {string} message - Message describing the error.
+     * Throws an HTTP error with the given code, message, and optional details.
+     *
+     * @param {Object} options - Object containing options for the error.
+     * @param {number} options.code - HTTP status code for the error.
+     * @param {string} [options.message="An unexpected error occurred, please try again later"] - Message describing the error.
+     * @param {Object} [options.details=undefined] - Optional details about the error.
      */
-    createError: function (response, code, message) {
-        this.handleError(response, { code, message });
+    throwHttpError: function (
+        code = 500,
+        message = "An unexpected error occurred, please try again later",
+        details = undefined,
+    ) {
+        const error = new Error();
+        error.statusCode = code;
+        error.message = message;
+        error.details = details;
+        throw error;
     },
 
     /**
-     * Handles an error response and sends it back with appropriate status code.
-     * 
-     * @param {Object} response - Express response object.
-     * @param {Object} error - Error object containing code and message properties.
+     * Middleware function to handle HTTP errors and send error responses.
+     *
+     * @param {Error} error - Error object containing statusCode, message, and details properties.
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     * @param {Function} next - Express next middleware function.
      */
-    handleError: function (response, error) {
-        // Extract code and message from the error object
-        const [code, message] = [
-            error.code ?? 500,
-            error.message ??
-                "An unexpected error occurred, please try again later",
-        ];
-
-        // Send error response with appropriate status code
-        return response
-            .status(code)
-            .send({ success: false, error: { status_code: code, message } });
+    errorResponder: (error, req, res, next) => {
+        // Extract properties from the error object
+        const { statusCode, message, details } = error;
+        // Get description of the status code from HTTP module
+        const codeDescription = http.STATUS_CODES[statusCode] ?? undefined;
+        // Construct error response object
+        const errorResponse = {
+            success: false,
+            error: {
+                status_code:
+                    `${statusCode} ${codeDescription ? `(${codeDescription})` : ""}`.trim(),
+                message,
+                details,
+            },
+        };
+        // Set response header and send error response with appropriate status code
+        res.header("Content-Type", "application/json");
+        return res.status(statusCode).json(errorResponse);
     },
 };

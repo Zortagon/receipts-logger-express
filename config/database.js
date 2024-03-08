@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Importing logger utility and chalk for colorful logging
-const { logger } = require("../utils");
+const logger = require("../utils/logger");
 const chalk = require("chalk");
 
 /** Asynchronous function to connect to the MongoDB database */

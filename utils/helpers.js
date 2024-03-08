@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { schema } = require("../models/User");
 
 /**
  * Checks if an object contains all required keys and optionally checks for unknown keys.
@@ -12,7 +13,7 @@ const mongoose = require("mongoose");
  *   - unknown: An array containing the keys that are present in the object but not in the requiredKeys array.
  * @throws {TypeError} - If the input types are not valid (object and array expected).
  */
-function keysCheck(object, requiredKeys, { strict = false } = {}) {
+async function keysCheck(object, requiredKeys, { strict = false } = {}) {
     if (typeof object !== "object" || !Array.isArray(requiredKeys)) {
         throw new TypeError(
             "Invalid input types. Object and array are expected.",
@@ -86,6 +87,55 @@ function typeCheck(inputObject, expectedTypes) {
     };
 }
 
-function getSchemaField() {}
+/**
+ * Retrieves fields from a Mongoose schema object based on specified options.
+ * @param {object} mongooseSchema - The Mongoose schema object.
+ * @param {object} options - Options for retrieving fields.
+ *   - requiredOnly {boolean}: If true, returns only required fields.
+ *   - typeOnly {boolean}: If true, returns only field types.
+ *   - fieldOnly {boolean}: If true, returns only field names.
+ * @returns {object|null|string[]} - An object containing fields or an array of field names,
+ *                                   or null if the provided schema is invalid.
+ */
+function getSchemaField(
+    mongooseSchema = {},
+    options = { requiredOnly: false, typeOnly: false, fieldOnly: false },
+) {
+    // Check if the mongooseSchema is valid
+    if (
+        mongooseSchema.hasOwnProperty("schema") &&
+        mongooseSchema.schema instanceof mongoose.Schema
+    ) {
+        // Extract the schema object
+        const schema = mongooseSchema.schema.obj;
+        const { requiredOnly, typeOnly, fieldOnly } = options;
+        // Return field names if fieldOnly is true
+        if (fieldOnly === true) {
+            return Object.keys(schema);
+        }
+        // Filter and extract required fields if requiredOnly is true
+        const fields = requiredOnly
+            ? Object.fromEntries(
+                  Object.entries(schema).filter(
+                      ([_, attributes]) => attributes.required === true,
+                  ),
+              )
+            : { ...schema };
+        // Convert field types to type names if typeOnly is true
+        if (typeOnly === true)
+            Object.keys(fields).forEach(
+                (attribute) => (fields[attribute] = fields[attribute].type),
+            );
+        // Return the resulting fields
+        return fields;
+    } else {
+        // Return null if the provided schema is invalid
+        return null;
+    }
+}
 
-module.exports = { logger: require("./logger"), keysCheck, typeCheck };
+module.exports = {
+    keysCheck,
+    typeCheck,
+    getSchemaField,
+};

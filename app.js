@@ -1,30 +1,28 @@
 const express = require("express");
+const connectDatabase = require("./config/database");
 
-const connectDatabase = require("./database");
+const { errorResponder } = require("./middlewares/ErrorMiddleware");
 
-const jwt = require("jsonwebtoken");
-const { handleError, createError } = require("./middlewares/ErrorMiddleware");
-
+// Connect to the database
 connectDatabase({
-    // Enable exiting the application if connection fails
-    stopFailed: true,
-    // Enable logging connection status
-    logger: true,
+    stopFailed: true, // Exit application on failed connect
+    logger: true, // Enable logger
 });
 
 const app = express();
 
+// Middleware for parsing JSON bodies
 app.use(express.json());
+// Middleware for parsing URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
-// Use the defined routes
+// Define routes
 app.use("/api", require("./routes/api"));
 app.use(require("./routes/auth"));
 
-app.get("/", (req, res) => {
-    createError(400, "wadw")
-});
-// app.use(handleError);
+// Error handling middleware
+app.use(errorResponder);
+// Default route for handling unmatched routes
 app.all("*", (_, res) => res.sendStatus(404));
 
 module.exports = app;
