@@ -23,7 +23,7 @@ module.exports = {
          * @param {Object} res - Express response object.
          */
         register: (req, res) => {
-            return res.status(200).send({ message: "Register" });
+            return res.status(200).send({ message: "<Register>" });
         },
         /**
          * Handler for GET request to login endpoint, returns a success message.
@@ -39,36 +39,21 @@ module.exports = {
          * Handler for POST request to register endpoint, performs user registration.
          * @param {Object} req - Express request object.
          * @param {Object} res - Express response object.
+         * @param next
          */
         register: async function (req, res, next) {
             // TODO: Implement user registration
-            const { email, password } = req.body;
+            const { email, password } = res.locals.body;
             try {
-                {
-                    if (!(email || password)) {
-                        let message = "email field not in body";
-                        if (!password) {
-                            message = "password field not in body";
-                        }
-                        throwHttpError(400, message);
-                    }
-                    if (password) {
-                        const minlength = User.schema.obj.password.minlength;
-                        if (password.length < minlength) {
-                            throwHttpError(400, "password min 6 chars");
-                        }
-                    }
-                    const user = await User.findOne({ email });
-                    if (user) {
-                        throwHttpError(400, "user aldready exist");
-                    }
+                const userExist = await User.findOne({ email });
+                if (userExist) {
+                    const message = "Email already in use, please use a different email address.";
+                    throwHttpError(409, message);
                 }
-                // console.info(User.schema.obj);
-                // await User.findOne({ email }).then((user) => {
-                //     if (user) throwHttpError(400, "memek");
-                // });
-                // const user = await User.create({ email, password });
-                return res.status(201).json(req.body);
+
+                const user = await User.create({ email, password });
+
+                return res.status(201).json({ email, password });
             } catch (error) {
                 next(error);
             }

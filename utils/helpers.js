@@ -15,16 +15,12 @@ const { schema } = require("../models/User");
  */
 async function keysCheck(object, requiredKeys, { strict = false } = {}) {
     if (typeof object !== "object" || !Array.isArray(requiredKeys)) {
-        throw new TypeError(
-            "Invalid input types. Object and array are expected.",
-        );
+        throw new TypeError("Invalid input types. Object and array are expected.");
     }
 
     const presentKeys = new Set(Object.keys(object));
     const missingKeys = requiredKeys.filter((key) => !presentKeys.has(key));
-    const unknownKeys = strict
-        ? [...presentKeys].filter((key) => !requiredKeys.includes(key))
-        : [];
+    const unknownKeys = strict ? [...presentKeys].filter((key) => !requiredKeys.includes(key)) : [];
 
     return {
         success: missingKeys.length === 0 && unknownKeys.length === 0,
@@ -39,11 +35,7 @@ async function keysCheck(object, requiredKeys, { strict = false } = {}) {
  * @returns {Object|string|number|boolean} - The converted object or the original primitive data.
  */
 function toNonPrimitive(primitiveData) {
-    if (
-        typeof primitiveData === "string" ||
-        typeof primitiveData === "number" ||
-        typeof primitiveData === "boolean"
-    ) {
+    if (typeof primitiveData === "string" || typeof primitiveData === "number" || typeof primitiveData === "boolean") {
         return Object(primitiveData);
     }
     return primitiveData;
@@ -59,7 +51,7 @@ function toNonPrimitive(primitiveData) {
  *   - invalid: An array containing the keys with values that have incorrect types.
  *   - missing: An array containing the keys that are required but missing from the object.
  */
-function typeCheck(inputObject, expectedTypes) {
+async function typeCheck(inputObject, expectedTypes) {
     const missingFields = [];
     const invalidFields = [];
 
@@ -97,15 +89,9 @@ function typeCheck(inputObject, expectedTypes) {
  * @returns {object|null|string[]} - An object containing fields or an array of field names,
  *                                   or null if the provided schema is invalid.
  */
-function getSchemaField(
-    mongooseSchema = {},
-    options = { requiredOnly: false, typeOnly: false, fieldOnly: false },
-) {
+function getSchemaField(mongooseSchema = {}, options = { requiredOnly: false, typeOnly: false, fieldOnly: false }) {
     // Check if the mongooseSchema is valid
-    if (
-        mongooseSchema.hasOwnProperty("schema") &&
-        mongooseSchema.schema instanceof mongoose.Schema
-    ) {
+    if (mongooseSchema.hasOwnProperty("schema") && mongooseSchema.schema instanceof mongoose.Schema) {
         // Extract the schema object
         const schema = mongooseSchema.schema.obj;
         const { requiredOnly, typeOnly, fieldOnly } = options;
@@ -115,17 +101,10 @@ function getSchemaField(
         }
         // Filter and extract required fields if requiredOnly is true
         const fields = requiredOnly
-            ? Object.fromEntries(
-                  Object.entries(schema).filter(
-                      ([_, attributes]) => attributes.required === true,
-                  ),
-              )
+            ? Object.fromEntries(Object.entries(schema).filter(([_, attributes]) => attributes.required === true))
             : { ...schema };
         // Convert field types to type names if typeOnly is true
-        if (typeOnly === true)
-            Object.keys(fields).forEach(
-                (attribute) => (fields[attribute] = fields[attribute].type),
-            );
+        if (typeOnly === true) Object.keys(fields).forEach((attribute) => (fields[attribute] = fields[attribute].type));
         // Return the resulting fields
         return fields;
     } else {

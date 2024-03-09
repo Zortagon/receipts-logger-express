@@ -12,9 +12,7 @@ const logger = {
      */
     print: function (prefix, message, color) {
         if (Array.isArray(message)) {
-            message.map((m) =>
-                console.info(chalk[color](prefix, m.toString())),
-            );
+            message.map((m) => console.info(chalk[color](prefix, m.toString())));
             return;
         }
         console.info(chalk[color](prefix, message.toString()));

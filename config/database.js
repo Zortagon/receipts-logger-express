@@ -14,10 +14,10 @@ async function connectDatabase(options) {
         const { connection } = await mongoose.connect(DB_CONNECTION);
 
         // Logging connection status if showLogger is true
-        if (options.logger == true)
+        if (options.logger === true)
             logger.info([
                 `Successfully connected to database: ${chalk.white.bold("MongoDB")}`,
-                `* (URL) Connection: ${chalk.green.underline(connection._connectionString)}`,
+                `* (URL) Connection: ${chalk.green.underline(connection["_connectionString"])}`,
             ]);
     } catch (error) {
         // Logging connection error and throwing an error

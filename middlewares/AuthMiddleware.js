@@ -4,11 +4,11 @@
  * and have the correct data types before proceeding with user registration.
  */
 
-const mongoose = require("mongoose");
 const User = require("../models/User");
 
 const { throwHttpError } = require("../middlewares/ErrorMiddleware");
 const { keysCheck, getSchemaField, typeCheck } = require("../utils/helpers");
+const { sanitizeObject } = require("../utils/validation");
 
 // Importing validation utilities
 const { isCorrectEmail, sanitizeString } = require("../utils/validation");
@@ -28,22 +28,32 @@ module.exports = {
             // Destructuring the register method from methodsHandler
             const { method } = checkHandler;
             try {
-                const { email, password } = req.body;
+                const requestObject = sanitizeObject(req.body);
+                const { email, password } = requestObject;
+
                 const userSchema = User.schema.obj;
 
                 // Check for required fields in the request body
-                await checkHandler.keysCheck(req.body, method.REGISTER);
+                await checkHandler.keysCheck(requestObject, method.REGISTER);
 
                 // Validate data types of required fields in the request body
-                await checkHandler.typeCheck(req.body, method.REGISTER);
+                await checkHandler.typeCheck(requestObject, method.REGISTER);
+
+                // Validate email address format
+                if (!isCorrectEmail(email)) {
+                    const message = `Invalid email address format: ${email}`;
+                    throwHttpError(400, message);
+                }
 
                 // Validate password length
-                if (password.length < userSchema.password.minlength) {
-                    const message = `Password must be at least ${userSchema.password.minlength} characters long`;
+                const { minlength: minlengthPassword } = userSchema.password;
+                if (password.length < minlengthPassword) {
+                    const message = `Password must be at least ${minlengthPassword} characters long`;
                     throwHttpError(400, message);
                 }
 
                 // Proceed to the next middleware if all validations pass
+
                 res.locals.body = { email, password };
                 next();
             } catch (error) {
@@ -79,9 +89,15 @@ const checkHandler = {
         } else if (method === this.method.LOGIN) {
             // TODO: Add logic to populate requiredKeys at method.LOGIN
         }
-        const { success, missing } = await keysCheck(paramObject, requiredKeys);
+        const params = [paramObject, requiredKeys, { strict: true }];
+        const { success, missing, unknown } = await keysCheck(...params);
         if (!success) {
-            const message = `Missing required fields: (${missing.join(", ")})`;
+            let message;
+            if (missing.length !== 0) {
+                message = `Missing required fields: (${missing.join(", ")})`;
+            } else {
+                message = `Unknown requested fields: (${unknown.join(", ")})`;
+            }
             throwHttpError(400, message);
         }
     },

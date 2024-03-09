@@ -14,7 +14,7 @@ function isCorrectEmail(str) {
     // If correction fails, return false
     if (!strCorrection) return false;
     // Perform regex check for email format
-    return /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/gm.test(strCorrection);
+    return /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/gm.test(str);
 }
 
 /**
@@ -46,4 +46,4 @@ function sanitizeObject(inputObject) {
     return inputObject;
 }
 
-module.exports = { isCorrectEmail, sanitizeString };
+module.exports = { isCorrectEmail, sanitizeString, sanitizeObject };

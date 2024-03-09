@@ -3,7 +3,8 @@
 // * Import the required modules for the server and app
 const app = require("../app"); // Main application module
 const http = require("http"); // Node.js HTTP server module
-
+// * Function for connecting application to database
+const connectDatabase = require("../config/database");
 // * Use a colorful library for terminal output
 const chalk = require("chalk");
 
@@ -71,7 +72,11 @@ serverInstance.on("error", (error) => {
 });
 
 // * Event listener for HTTP server "listening" event
-serverInstance.on("listening", () => {
+serverInstance.on("listening", async () => {
+    await connectDatabase({
+        stopFailed: true, // Exit application on failed connect
+        logger: true, // Enable logger
+    });
     const addr = serverInstance.address();
     const bind =
         process.env.NODE_ENV === "DEV"
